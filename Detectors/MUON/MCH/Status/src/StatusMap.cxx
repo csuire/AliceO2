@@ -12,6 +12,7 @@
 #include "MCHStatus/StatusMap.h"
 
 #include <fmt/format.h>
+#include <iostream>
 
 ClassImp(o2::mch::StatusMap);
 
@@ -30,9 +31,17 @@ void assertValidMask(uint32_t mask)
 void StatusMap::add(gsl::span<const DsChannelId> badchannels, uint32_t mask)
 {
   assertValidMask(mask);
+  bool skipFaultyChannelId = true;
   for (auto id : badchannels) {
-    ChannelCode cc(id.getSolarId(), id.getElinkId(), id.getChannel());
-    mStatus[cc] |= mask;
+    //std::cout << "inspecting solar " << id.asString() << " \n"; 
+    ChannelCode cc(id.getSolarId(), id.getElinkId(), id.getChannel(), skipFaultyChannelId);
+    //ChannelCode cc(id.getSolarId(), id.getElinkId(), id.getChannel());
+    // std::cout << "cc value " << cc.value() << "\n";
+    // << "  cc data " << o2::mch::asString(cc) << "\n";
+    if (cc.isValid())
+      mStatus[cc] |= mask;
+    else
+      std::cout << "Invalid channel, cc value " << cc.value() << "\n";
   }
 }
 

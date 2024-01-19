@@ -41,7 +41,11 @@ void queryBadChannels(const std::string ccdbUrl,
   if (verbose) {
     for (const auto& badChannel : *badChannels) {
       std::cout << badChannel.asString() << "\n";
+<<<<<<< HEAD
       std::cout << badChannel.value() << "\n"; 
+=======
+      //std::cout << badChannel.value() << "\n"; 
+>>>>>>> dev
     }
   }
 }
