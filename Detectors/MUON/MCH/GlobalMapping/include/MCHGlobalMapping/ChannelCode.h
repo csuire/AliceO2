@@ -67,6 +67,8 @@ class ChannelCode
    * in some other parts of the code, as for elink the id is the index.
    */
   ChannelCode(uint16_t solarId, uint8_t elinkIndex, uint8_t channel);
+  ChannelCode(uint16_t solarId, uint8_t elinkIndex, uint8_t channel, bool skipBadChannelId);
+
 
   /** return the detection element _identifier_ */
   uint16_t getDeId() const;

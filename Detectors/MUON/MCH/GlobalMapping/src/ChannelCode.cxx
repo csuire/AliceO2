@@ -59,6 +59,7 @@ ChannelCode::ChannelCode(uint16_t solarId, uint8_t elinkId, uint8_t channel)
   if (solarIndexOpt == std::nullopt) {
     throw std::runtime_error(fmt::format("invalid solarId {}", solarId));
   }
+
   static auto elec2det = raw::createElec2DetMapper<raw::ElectronicMapperGenerated>();
   auto group = raw::groupFromElinkId(elinkId);
   auto index = raw::indexFromElinkId(elinkId);
@@ -83,6 +84,42 @@ ChannelCode::ChannelCode(uint16_t solarId, uint8_t elinkId, uint8_t channel)
   auto dsIndex = o2::mch::getDsIndex(dsDetIdOpt.value());
   auto solarIndex = solarIndexOpt.value();
   set(deIndexOpt.value(), dePadIndex, dsIndex, solarIndex, elinkId, channel);
+}
+
+ChannelCode::ChannelCode(uint16_t solarId, uint8_t elinkId, uint8_t channel, bool skipBadChannelId)
+{
+  auto solarIndexOpt = raw::solarId2Index<raw::ElectronicMapperGenerated>(solarId);
+  if (solarIndexOpt == std::nullopt) {
+    std::cout << fmt::format("invalid solarId {}", solarId) << "\n";
+  } else {
+    static auto elec2det = raw::createElec2DetMapper<raw::ElectronicMapperGenerated>();
+    auto group = raw::groupFromElinkId(elinkId);
+    auto index = raw::indexFromElinkId(elinkId);
+    raw::DsElecId dsElecId{solarId, group.value(), index.value()};
+    auto dsDetIdOpt = elec2det(dsElecId);
+    if (dsDetIdOpt == std::nullopt) {
+      std::cout << fmt::format("invalid solarid {} elinkid {}",
+                               solarId, elinkId)
+                << "\n";
+    } else {
+      auto deId = dsDetIdOpt->deId();
+      auto deIndexOpt = constants::deId2DeIndex(deId);
+      if (deIndexOpt == std::nullopt) {
+        std::cout << fmt::format("invalid deId {}", deId) << "\n";
+      }
+      const auto& seg = o2::mch::mapping::segmentation(deId);
+      auto dsId = dsDetIdOpt->dsId();
+      int dePadIndex = seg.findPadByFEE(dsId, channel);
+      if (!seg.isValid(dePadIndex)) {
+        std::cout << fmt::format("invalid dePadIndex {} for deId {}",
+                                 dePadIndex, deId)
+                  << "\n";
+      }
+      auto dsIndex = o2::mch::getDsIndex(dsDetIdOpt.value());
+      auto solarIndex = solarIndexOpt.value();
+      set(deIndexOpt.value(), dePadIndex, dsIndex, solarIndex, elinkId, channel);
+    }
+  }
 }
 
 /** build a 64 bits integer from the various indices.
